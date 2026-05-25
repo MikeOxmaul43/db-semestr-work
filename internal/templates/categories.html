@@ -1,0 +1,57 @@
+{{define "content"}}
+<h2>🗂 Категории</h2>
+
+<div class="card">
+  <h3>➕ Добавить категорию</h3>
+  <form action="/categories/add" method="POST">
+    <div class="field"><label>Название</label><input name="name" required placeholder="Цемент"></div>
+    <div class="field"><label>Описание</label><input name="description" placeholder="..."></div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Список категорий</h3>
+  <table>
+    <tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr>
+    {{range .Categories}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.Name}}</td>
+      <td>{{.Description}}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-warning btn-sm" onclick="openEdit({{.ID}},'{{.Name}}','{{.Description}}')">✏️</button>
+        <form action="/categories/delete" method="POST" onsubmit="return confirm('Удалить?')">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn btn-danger btn-sm" type="submit">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="4" style="text-align:center;color:#999">Нет категорий</td></tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('editModal')">×</button>
+    <h3>✏️ Редактировать категорию</h3>
+    <form action="/categories/update" method="POST">
+      <input type="hidden" name="id" id="e_id">
+      <div class="field"><label>Название</label><input name="name" id="e_name" required></div>
+      <div class="field"><label>Описание</label><input name="description" id="e_desc"></div>
+      <button class="btn btn-primary" type="submit">💾 Сохранить</button>
+    </form>
+  </div>
+</div>
+<script>
+function openEdit(id,name,desc){
+  document.getElementById('e_id').value=id;
+  document.getElementById('e_name').value=name;
+  document.getElementById('e_desc').value=desc;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+</script>
+{{end}}

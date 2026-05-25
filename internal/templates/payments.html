@@ -1,0 +1,43 @@
+{{define "content"}}
+<h2>💳 Платежи</h2>
+
+<div class="card">
+  <h3>➕ Добавить платёж</h3>
+  <form action="/payments/add" method="POST">
+    <div class="field"><label>Заказ</label>
+      <select name="order_id" required>
+        <option value="">— выберите заказ —</option>
+        {{range .Orders}}<option value="{{.ID}}">#{{.ID}} — {{.CustomerName}} ({{.Status}})</option>{{end}}
+      </select>
+    </div>
+    <div class="field"><label>Сумма (₽)</label><input name="amount" type="number" step="0.01" min="0" required placeholder="0.00"></div>
+    <div class="field"><label>Способ оплаты</label>
+      <select name="method">
+        <option value="cash">Наличные</option>
+        <option value="card">Карта</option>
+        <option value="transfer">Перевод</option>
+        <option value="online">Онлайн</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>История платежей</h3>
+  <table>
+    <tr><th>ID</th><th>Дата</th><th>Сумма</th><th>Способ</th><th>Заказ #</th></tr>
+    {{range .Payments}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.Date}}</td>
+      <td>{{printf "%.2f" .Amount}} ₽</td>
+      <td><span class="badge badge-blue">{{.Method}}</span></td>
+      <td>{{.OrderID}}</td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" style="text-align:center;color:#999">Нет платежей</td></tr>
+    {{end}}
+  </table>
+</div>
+{{end}}

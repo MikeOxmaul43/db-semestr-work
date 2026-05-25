@@ -1,0 +1,117 @@
+{{define "content"}}
+<h2>📦 Товары</h2>
+
+<div class="card">
+  <h3>➕ Добавить товар</h3>
+  <form action="/products/add" method="POST">
+    <div class="field"><label>Название</label><input name="name" required placeholder="Цемент М500"></div>
+    <div class="field"><label>Ед. изм.</label><input name="unit" placeholder="кг, м², шт"></div>
+    <div class="field"><label>Цена (₽)</label><input name="price" type="number" step="0.01" min="0" required placeholder="0.00"></div>
+    <div class="field"><label>Категория</label>
+      <select name="category_id">
+        <option value="0">— не указана —</option>
+        {{range .Categories}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+      </select>
+    </div>
+    <div class="field"><label>Поставщик</label>
+      <select name="supplier_id">
+        <option value="0">— не указан —</option>
+        {{range .Suppliers}}<option value="{{.ID}}">{{.CompanyName}}</option>{{end}}
+      </select>
+    </div>
+    <div class="field"><label>Описание</label><input name="description" placeholder="..."></div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Список товаров</h3>
+  <table>
+    <tr><th>ID</th><th>Название</th><th>Ед.</th><th>Цена</th><th>Категория</th><th>Поставщик</th><th>На складе</th><th>Действия</th></tr>
+    {{range .Products}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.Name}}</td>
+      <td>{{.Unit}}</td>
+      <td>{{printf "%.2f" .Price}} ₽</td>
+      <td>{{.CategoryName}}</td>
+      <td>{{.SupplierName}}</td>
+      <td>
+        {{if eq .Quantity 0}}<span class="badge badge-red">0</span>
+        {{else if lt .Quantity 10}}<span class="badge badge-blue">{{.Quantity}}</span>
+        {{else}}<span class="badge badge-green">{{.Quantity}}</span>{{end}}
+      </td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-warning btn-sm" onclick="openEditProduct({{.ID}},'{{.Name}}','{{.Unit}}',{{.Price}},'{{.Description}}')">✏️</button>
+        <button class="btn btn-primary btn-sm" onclick="openStock({{.ID}},'{{.Name}}',{{.Quantity}})">📦</button>
+        <form action="/products/delete" method="POST" onsubmit="return confirm('Удалить товар?')">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn btn-danger btn-sm" type="submit">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="8" style="text-align:center;color:#999">Нет товаров</td></tr>
+    {{end}}
+  </table>
+</div>
+
+<!-- Edit product modal -->
+<div class="modal-bg" id="editProductModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('editProductModal')">×</button>
+    <h3>✏️ Редактировать товар</h3>
+    <form action="/products/update" method="POST">
+      <input type="hidden" name="id" id="ep_id">
+      <div class="field"><label>Название</label><input name="name" id="ep_name" required></div>
+      <div class="field"><label>Ед. изм.</label><input name="unit" id="ep_unit"></div>
+      <div class="field"><label>Цена (₽)</label><input name="price" id="ep_price" type="number" step="0.01" min="0"></div>
+      <div class="field"><label>Описание</label><input name="description" id="ep_desc"></div>
+      <div class="field"><label>Категория</label>
+        <select name="category_id">
+          <option value="0">— не указана —</option>
+          {{range .Categories}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+        </select>
+      </div>
+      <div class="field"><label>Поставщик</label>
+        <select name="supplier_id">
+          <option value="0">— не указан —</option>
+          {{range .Suppliers}}<option value="{{.ID}}">{{.CompanyName}}</option>{{end}}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">💾 Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<!-- Stock modal -->
+<div class="modal-bg" id="stockModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('stockModal')">×</button>
+    <h3>📦 Остаток на складе: <span id="st_name"></span></h3>
+    <form action="/products/stock" method="POST">
+      <input type="hidden" name="product_id" id="st_id">
+      <div class="field"><label>Количество</label><input name="quantity" id="st_qty" type="number" min="0" required></div>
+      <button class="btn btn-primary" type="submit">💾 Обновить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditProduct(id,name,unit,price,desc){
+  document.getElementById('ep_id').value=id;
+  document.getElementById('ep_name').value=name;
+  document.getElementById('ep_unit').value=unit;
+  document.getElementById('ep_price').value=price;
+  document.getElementById('ep_desc').value=desc;
+  document.getElementById('editProductModal').classList.add('open');
+}
+function openStock(id,name,qty){
+  document.getElementById('st_id').value=id;
+  document.getElementById('st_name').textContent=name;
+  document.getElementById('st_qty').value=qty;
+  document.getElementById('stockModal').classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+</script>
+{{end}}

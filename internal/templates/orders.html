@@ -1,0 +1,148 @@
+{{define "content"}}
+<h2>🛒 Заказы</h2>
+
+<div class="card">
+  <h3>➕ Оформить заказ</h3>
+  <form id="orderForm" action="/orders/add" method="POST">
+    <div class="field"><label>Клиент</label>
+      <select name="customer_id" required>
+        <option value="">— выберите клиента —</option>
+        {{range .Customers}}<option value="{{.ID}}">{{.FirstName}} {{.LastName}}</option>{{end}}
+      </select>
+    </div>
+    <div class="field"><label>Сотрудник</label>
+      <select name="employee_id">
+        <option value="0">— не указан —</option>
+        {{range .Employees}}<option value="{{.ID}}">{{.FirstName}} {{.LastName}}</option>{{end}}
+      </select>
+    </div>
+    <input type="hidden" name="items" id="itemsJSON">
+    <div style="width:100%">
+      <div id="itemsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="addItem()">+ Добавить товар</button>
+    </div>
+    <button class="btn btn-primary" type="button" onclick="submitOrder()" style="margin-top:8px;">Создать заказ</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Список заказов</h3>
+  <table>
+    <tr><th>ID</th><th>Статус</th><th>Дата</th><th>Клиент</th><th>Сотрудник</th><th>Действия</th></tr>
+    {{range .Orders}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>
+        {{if eq .Status "pending"}}<span class="badge badge-blue">pending</span>
+        {{else if eq .Status "completed"}}<span class="badge badge-green">completed</span>
+        {{else if eq .Status "cancelled"}}<span class="badge badge-red">cancelled</span>
+        {{else}}<span class="badge badge-gray">{{.Status}}</span>{{end}}
+      </td>
+      <td>{{.Date}}</td>
+      <td>{{.CustomerName}}</td>
+      <td>{{.EmployeeName}}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="openStatus({{.ID}},'{{.Status}}')">📝 Статус</button>
+        <form action="/orders/delete" method="POST" onsubmit="return confirm('Удалить заказ?')">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn btn-danger btn-sm" type="submit">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="6" style="text-align:center;color:#999">Нет заказов</td></tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="modal-bg" id="statusModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('statusModal')">×</button>
+    <h3>📝 Изменить статус заказа #<span id="sm_id_label"></span></h3>
+    <form action="/orders/status" method="POST">
+      <input type="hidden" name="id" id="sm_id">
+      <div class="field"><label>Новый статус</label>
+        <select name="status" id="sm_status">
+          <option value="pending">pending</option>
+          <option value="processing">processing</option>
+          <option value="completed">completed</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">💾 Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const products = [
+  {{range .Products}}{id:{{.ID}}, name:"{{.Name}}", qty:{{.Quantity}}},{{end}}
+];
+
+function addItem() {
+  const list = document.getElementById('itemsList');
+
+  const row = document.createElement('div');
+  row.className = 'order-item-row';
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
+  const sel = document.createElement('select');
+  sel.className = 'item-product';
+  sel.style.cssText = 'flex:2;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;';
+  sel.innerHTML = '<option value="">— товар —</option>' +
+    products.map(p => `<option value="${p.id}">${p.name} (склад: ${p.qty})</option>`).join('');
+
+  const qty = document.createElement('input');
+  qty.className = 'item-qty';
+  qty.type = 'number';
+  qty.min = '1';
+  qty.placeholder = 'кол-во';
+  qty.style.cssText = 'flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;';
+
+  const rm = document.createElement('button');
+  rm.type = 'button';
+  rm.textContent = '✕';
+  rm.className = 'btn btn-danger btn-sm';
+  rm.onclick = () => row.remove();
+
+  row.appendChild(sel);
+  row.appendChild(qty);
+  row.appendChild(rm);
+  list.appendChild(row);
+}
+
+function submitOrder() {
+  const rows = document.querySelectorAll('.order-item-row');
+  const items = [];
+
+  rows.forEach(row => {
+    const sel = row.querySelector('.item-product');
+    const qty = row.querySelector('.item-qty');
+    const pid = parseInt(sel.value);
+    const q   = parseInt(qty.value);
+    if (pid > 0 && q > 0) {
+      items.push({product_id: pid, quantity: q});
+    }
+  });
+
+  if (items.length === 0) {
+    alert('Добавьте хотя бы один товар и выберите продукт');
+    return;
+  }
+
+  document.getElementById('itemsJSON').value = JSON.stringify(items);
+  document.getElementById('orderForm').submit();
+}
+
+function openStatus(id, current) {
+  document.getElementById('sm_id').value = id;
+  document.getElementById('sm_id_label').textContent = id;
+  document.getElementById('sm_status').value = current;
+  document.getElementById('statusModal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+</script>
+{{end}}

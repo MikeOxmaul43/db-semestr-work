@@ -1,0 +1,71 @@
+{{define "content"}}
+<h2>👥 Клиенты</h2>
+
+<div class="card">
+  <h3>➕ Добавить клиента</h3>
+  <form action="/customers/add" method="POST">
+    <div class="field"><label>Имя</label><input name="first_name" required placeholder="Иван"></div>
+    <div class="field"><label>Фамилия</label><input name="last_name" required placeholder="Иванов"></div>
+    <div class="field"><label>Email</label><input name="email" type="email" placeholder="ivan@mail.ru"></div>
+    <div class="field"><label>Телефон</label><input name="phone" placeholder="+7-999-000-00-00"></div>
+    <div class="field"><label>Адрес</label><input name="address" placeholder="ул. Ленина, 1"></div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Список клиентов</h3>
+  <table>
+    <tr><th>ID</th><th>Имя</th><th>Фамилия</th><th>Email</th><th>Телефон</th><th>Адрес</th><th>Действия</th></tr>
+    {{range .Customers}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.FirstName}}</td>
+      <td>{{.LastName}}</td>
+      <td>{{.Email}}</td>
+      <td>{{.Phone}}</td>
+      <td>{{.Address}}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-warning btn-sm" onclick="openEditCustomer({{.ID}},'{{.FirstName}}','{{.LastName}}','{{.Email}}','{{.Phone}}','{{.Address}}')">✏️</button>
+        <form action="/customers/delete" method="POST" style="display:inline" onsubmit="return confirm('Удалить клиента?')">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn btn-danger btn-sm" type="submit">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="7" style="text-align:center;color:#999">Нет клиентов</td></tr>
+    {{end}}
+  </table>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-bg" id="editCustomerModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('editCustomerModal')">×</button>
+    <h3>✏️ Редактировать клиента</h3>
+    <form action="/customers/update" method="POST">
+      <input type="hidden" name="id" id="ec_id">
+      <div class="field"><label>Имя</label><input name="first_name" id="ec_first" required></div>
+      <div class="field"><label>Фамилия</label><input name="last_name" id="ec_last" required></div>
+      <div class="field"><label>Email</label><input name="email" id="ec_email" type="email"></div>
+      <div class="field"><label>Телефон</label><input name="phone" id="ec_phone"></div>
+      <div class="field"><label>Адрес</label><input name="address" id="ec_address"></div>
+      <button class="btn btn-primary" type="submit">💾 Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditCustomer(id,fn,ln,email,phone,addr){
+  document.getElementById('ec_id').value=id;
+  document.getElementById('ec_first').value=fn;
+  document.getElementById('ec_last').value=ln;
+  document.getElementById('ec_email').value=email;
+  document.getElementById('ec_phone').value=phone;
+  document.getElementById('ec_address').value=addr;
+  document.getElementById('editCustomerModal').classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+</script>
+{{end}}

@@ -1,0 +1,69 @@
+{{define "content"}}
+<h2>🏭 Поставщики</h2>
+
+<div class="card">
+  <h3>➕ Добавить поставщика</h3>
+  <form action="/suppliers/add" method="POST">
+    <div class="field"><label>Компания</label><input name="company_name" required placeholder="ООО Стройснаб"></div>
+    <div class="field"><label>Контактное лицо</label><input name="contact_person" placeholder="Петров П.П."></div>
+    <div class="field"><label>Email</label><input name="email" type="email" placeholder="info@company.ru"></div>
+    <div class="field"><label>Телефон</label><input name="phone" placeholder="+7-800-000-00-00"></div>
+    <div class="field"><label>Адрес</label><input name="address" placeholder="г. Москва, ..."></div>
+    <button class="btn btn-primary" type="submit">Добавить</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Список поставщиков</h3>
+  <table>
+    <tr><th>ID</th><th>Компания</th><th>Контакт</th><th>Email</th><th>Телефон</th><th>Адрес</th><th>Действия</th></tr>
+    {{range .Suppliers}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.CompanyName}}</td>
+      <td>{{.ContactPerson}}</td>
+      <td>{{.Email}}</td>
+      <td>{{.Phone}}</td>
+      <td>{{.Address}}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-warning btn-sm" onclick="openEdit({{.ID}},'{{.CompanyName}}','{{.ContactPerson}}','{{.Email}}','{{.Phone}}','{{.Address}}')">✏️</button>
+        <form action="/suppliers/delete" method="POST" onsubmit="return confirm('Удалить поставщика?')">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn btn-danger btn-sm" type="submit">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="7" style="text-align:center;color:#999">Нет поставщиков</td></tr>
+    {{end}}
+  </table>
+</div>
+
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <button class="close-btn" onclick="closeModal('editModal')">×</button>
+    <h3>✏️ Редактировать поставщика</h3>
+    <form action="/suppliers/update" method="POST">
+      <input type="hidden" name="id" id="e_id">
+      <div class="field"><label>Компания</label><input name="company_name" id="e_company" required></div>
+      <div class="field"><label>Контакт</label><input name="contact_person" id="e_contact"></div>
+      <div class="field"><label>Email</label><input name="email" id="e_email" type="email"></div>
+      <div class="field"><label>Телефон</label><input name="phone" id="e_phone"></div>
+      <div class="field"><label>Адрес</label><input name="address" id="e_addr"></div>
+      <button class="btn btn-primary" type="submit">💾 Сохранить</button>
+    </form>
+  </div>
+</div>
+<script>
+function openEdit(id,co,ct,em,ph,ad){
+  document.getElementById('e_id').value=id;
+  document.getElementById('e_company').value=co;
+  document.getElementById('e_contact').value=ct;
+  document.getElementById('e_email').value=em;
+  document.getElementById('e_phone').value=ph;
+  document.getElementById('e_addr').value=ad;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+</script>
+{{end}}
